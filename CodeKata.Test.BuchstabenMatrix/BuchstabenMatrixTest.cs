@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using CodeKata.BuchstabenMatrix;
 using NUnit.Framework;
@@ -24,12 +25,12 @@ namespace CodeKata.Test.BuchstabenMatrix
             Assert.That(listeVonMatches.Count, Is.EqualTo(1));
             Assert.That(anzahlMatches, Is.EqualTo(1));
 
-            var erwartetePositionen = new List<Tuple<int, int>>();
-            erwartetePositionen.Add(new Tuple<int, int>(0, 0));
-            erwartetePositionen.Add(new Tuple<int, int>(1, 0));
-            erwartetePositionen.Add(new Tuple<int, int>(1, 1));
-            erwartetePositionen.Add(new Tuple<int, int>(2, 1));
-            erwartetePositionen.Add(new Tuple<int, int>(2, 2));
+            var erwartetePositionen = new List<Point>();
+            erwartetePositionen.Add(new Point(0, 0));
+            erwartetePositionen.Add(new Point(1, 0));
+            erwartetePositionen.Add(new Point(1, 1));
+            erwartetePositionen.Add(new Point(2, 1));
+            erwartetePositionen.Add(new Point(2, 2));
 
             Assert.That(listeVonMatches[0], Is.EqualTo(erwartetePositionen));
         }

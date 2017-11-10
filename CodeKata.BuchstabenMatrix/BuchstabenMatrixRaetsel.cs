@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 
@@ -10,8 +11,7 @@ namespace CodeKata.BuchstabenMatrix
         private readonly char[][] buchstabenMatrix;
         private readonly string zuMatchendesWort;
 
-        //todo: Nutze Position anstatt Tupel<int,int>
-        private List<List<Tuple<int, int>>> listeVonMatches = null;
+        private List<List<Point>> listeVonMatches = null;
 
         public BuchstabenMatrixRaetsel(char[][] buchstabenMatrix, string zuMatchendesWort)
         {
@@ -19,31 +19,22 @@ namespace CodeKata.BuchstabenMatrix
             this.zuMatchendesWort = zuMatchendesWort;
         }
 
-        public List<List<Tuple<int, int>>> HoleMatches()
+        public List<List<Point>> HoleMatches()
         {
-            if (listeVonMatches == null)
-            {
-                throw new TargetInvocationException("Sie haben das Rätsel noch nicht gelöst.", null);
-            }
-
+            CheckObDasRaetselGeloestWurde();
             return listeVonMatches;
         }
 
-        public int AnzahlMatches
+      public int AnzahlMatches
         {
             get
             {
-                if (listeVonMatches == null)
-                {
-                    throw new TargetInvocationException("Sie haben das Rätsel noch nicht gelöst.", null);
-                }
-
+                CheckObDasRaetselGeloestWurde();
                 return listeVonMatches.Count;
             }
         }
 
-
-        public List<List<Tuple<int, int>>> LoeseRaetsel()
+        public List<List<Point>> LoeseRaetsel()
         {
             //todo: Überlegen, ob es besser ist, die folgende Assertion direkt im Konstruktor zu machen. 
             //Dann kann mann verhindern, dass das BuchstabenMatrixRaetsel Objekt
@@ -59,19 +50,19 @@ namespace CodeKata.BuchstabenMatrix
                 throw new ArgumentException("Es wurde kein zu findendes Wort definiert.");
             }
 
-            listeVonMatches = new List<List<Tuple<int, int>>>();
+            listeVonMatches = new List<List<Point>>();
 
             var buchstabenStack = new Stack<char>(zuMatchendesWort.Reverse());
-            var startIndex = new Tuple<int, int>(0, 0);
-            var matches = new List<Tuple<int, int>>();
+            var startIndex = new Point(0, 0);
+            var matches = new List<Point>();
 
             BestueckeListeVonMatches(buchstabenStack, startIndex, matches);
 
             return listeVonMatches;
         }
 
-        private void BestueckeListeVonMatches(Stack<char> buchstabenStack, Tuple<int, int> startIndex,
-            List<Tuple<int, int>> matches)
+        private void BestueckeListeVonMatches(Stack<char> buchstabenStack, Point startIndex,
+            List<Point> matches)
         {
             if (buchstabenStack.Count == 0)
             {
@@ -84,12 +75,12 @@ namespace CodeKata.BuchstabenMatrix
             }
 
             var zusuchendeBuchstabe = buchstabenStack.Pop();
-            for (var indexBuchstabenArray = startIndex.Item1;
+            for (var indexBuchstabenArray = startIndex.X;
                 indexBuchstabenArray < buchstabenMatrix.Length;
                 indexBuchstabenArray++)
             {
                 var buchstabenArray = buchstabenMatrix[indexBuchstabenArray];
-                for (var indexBuchstabe = startIndex.Item2; indexBuchstabe < buchstabenArray.Length; indexBuchstabe++)
+                for (var indexBuchstabe = startIndex.Y; indexBuchstabe < buchstabenArray.Length; indexBuchstabe++)
                 {
                     var buchstabeInArray = buchstabenMatrix[indexBuchstabenArray][indexBuchstabe];
                     if (buchstabeInArray == zusuchendeBuchstabe)
@@ -97,21 +88,21 @@ namespace CodeKata.BuchstabenMatrix
                         if (matches.Count == 0)
                         {
                             //Erstes Wort
-                            matches.Add(new Tuple<int, int>(indexBuchstabenArray, indexBuchstabe));
-                            var neuerStartIndex = new Tuple<int, int>(matches.Last().Item1, matches.Last().Item2);
+                            matches.Add(new Point(indexBuchstabenArray, indexBuchstabe));
+                            var neuerStartIndex = new Point(matches.Last().X, matches.Last().Y);
 
                             var buchstabenStackIntern = new Stack<char>(zuMatchendesWort.Reverse());
                             buchstabenStackIntern.Pop();
                             BestueckeListeVonMatches(buchstabenStackIntern, neuerStartIndex, matches);
-                            matches = new List<Tuple<int, int>>();
+                            matches = new List<Point>();
                             continue;
                         }
 
                         var vorherigeBuchstabenIndex = matches.Last();
-                        var aktuelleBuchstabenIndex = new Tuple<int, int>(indexBuchstabenArray, indexBuchstabe);
+                        var aktuelleBuchstabenIndex = new Point(indexBuchstabenArray, indexBuchstabe);
                         if (SindDieBuchstabenZusamenhaengend(vorherigeBuchstabenIndex, aktuelleBuchstabenIndex))
                         {
-                            matches.Add(new Tuple<int, int>(indexBuchstabenArray, indexBuchstabe));
+                            matches.Add(new Point(indexBuchstabenArray, indexBuchstabe));
                             if (matches.Count == zuMatchendesWort.Length)
                             {
                                 listeVonMatches.Add(matches);
@@ -130,14 +121,22 @@ namespace CodeKata.BuchstabenMatrix
             }
         }
 
-        private bool SindDieBuchstabenZusamenhaengend(Tuple<int, int> vorherigeBuchstabenIndex, Tuple<int, int> aktuelleBuchstabenIndex)
+        private static bool SindDieBuchstabenZusamenhaengend(Point vorherigeBuchstabenIndex, Point aktuelleBuchstabenIndex)
         {
-            var liegtHorizontalNebeneinander = vorherigeBuchstabenIndex.Item1 == aktuelleBuchstabenIndex.Item1
-                                               && vorherigeBuchstabenIndex.Item2 < aktuelleBuchstabenIndex.Item2;
+            var liegtHorizontalNebeneinander = vorherigeBuchstabenIndex.X == aktuelleBuchstabenIndex.X
+                                               && vorherigeBuchstabenIndex.Y < aktuelleBuchstabenIndex.Y;
 
-            var liegtVertikalNebeEinander = vorherigeBuchstabenIndex.Item2 == aktuelleBuchstabenIndex.Item2;
+            var liegtVertikalNebeEinander = vorherigeBuchstabenIndex.Y == aktuelleBuchstabenIndex.Y;
 
             return liegtHorizontalNebeneinander || liegtVertikalNebeEinander;
+        }
+
+        private void CheckObDasRaetselGeloestWurde()
+        {
+            if (listeVonMatches == null)
+            {
+                throw new TargetInvocationException("Sie haben das Rätsel noch nicht gelöst.", null);
+            }
         }
     }
 }
