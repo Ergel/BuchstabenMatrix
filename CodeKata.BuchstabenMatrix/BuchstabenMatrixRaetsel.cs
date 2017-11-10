@@ -6,6 +6,13 @@ using System.Reflection;
 
 namespace CodeKata.BuchstabenMatrix
 {
+    /// <summary>
+    /// Hier wird ein BuchstabenMatrix Rätsel abgebildet, indem man ein Wort suchen muss.
+    /// Beim Lesen ist stets von einem Buchstaben zu einem benachbarten Buchstaben (nach rechts oder nach unten) fortzuschreiten.
+    /// </summary>
+    /// <example>
+    /// //TODO: Ein besiepiel wäre hier nicht schlecht, um die Regeln klar zu machen.
+    /// </example>
     public class BuchstabenMatrixRaetsel
     {
         private readonly char[][] buchstabenMatrix;
