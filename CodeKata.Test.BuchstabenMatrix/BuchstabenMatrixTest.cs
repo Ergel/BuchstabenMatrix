@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CodeKata.BuchstabenMatrix;
 using NUnit.Framework;
 
 namespace CodeKata.Test.BuchstabenMatrix
@@ -9,23 +10,19 @@ namespace CodeKata.Test.BuchstabenMatrix
     public class BuchstabenMatrixTest
     {
         readonly char[][] buchstabenMatrix = ErzeugeZufaelligeBuchstabenMatrix();
-        private List<List<Tuple<int, int>>> listeVonMatches;
-        private string _zuMatchendesWort;
 
         [Test]
         public void TestDasFindenVonEinemWortInDerBuchstabenMatrixWennDasWortVorhandenIst()
         {
-            _zuMatchendesWort = "KATZE";
+            var zuMatchendesWort = "KATZE";
 
-            var buchstabenStack = new Stack<char>(_zuMatchendesWort.Reverse());
-            var startIndex = new Tuple<int, int>(0, 0);
+            var buchstabenMatrixRaetsel = new BuchstabenMatrixRaetsel(buchstabenMatrix, zuMatchendesWort);
+            buchstabenMatrixRaetsel.LoeseRaetsel();
+            var anzahlMatches = buchstabenMatrixRaetsel.AnzahlMatches;
+            var listeVonMatches = buchstabenMatrixRaetsel.HoleMatches();
 
-            // TODO: Feste struktur für Position nund Buchstabe
-            listeVonMatches = new List<List<Tuple<int, int>>>();
-            var matches = new List<Tuple<int, int>>();
-
-            BestueckeListeVonMatches(buchstabenStack, startIndex, matches);
             Assert.That(listeVonMatches.Count, Is.EqualTo(1));
+            Assert.That(anzahlMatches, Is.EqualTo(1));
 
             var erwartetePositionen = new List<Tuple<int, int>>();
             erwartetePositionen.Add(new Tuple<int, int>(0, 0));
@@ -37,75 +34,80 @@ namespace CodeKata.Test.BuchstabenMatrix
             Assert.That(listeVonMatches[0], Is.EqualTo(erwartetePositionen));
         }
 
-        private void BestueckeListeVonMatches(Stack<char> buchstabenStack, Tuple<int, int> startIndex,
-            List<Tuple<int, int>> matches)
+        [Test]
+        public void TestDasFindenVonEinemWortInDerBuchstabenMatrixWennDasWortMerhmalsVorhandenIst()
         {
-            if (buchstabenStack.Count == 0)
-            {
-                return;
-            }
+            var zuMatchendesWort = "KAT";
 
-            if (matches.Count == 5)
-            {
-                return;
-            }
+            var buchstabenMatrixRaetsel = new BuchstabenMatrixRaetsel(buchstabenMatrix, zuMatchendesWort);
+            buchstabenMatrixRaetsel.LoeseRaetsel();
+            var anzahlMatches = buchstabenMatrixRaetsel.AnzahlMatches;
 
-            var zusuchendeBuchstabe = buchstabenStack.Pop();
-            for (var indexBuchstabenArray = startIndex.Item1;
-                indexBuchstabenArray < buchstabenMatrix.Length;
-                indexBuchstabenArray++)
-            {
-                var buchstabenArray = buchstabenMatrix[indexBuchstabenArray];
-                for (var indexBuchstabe = startIndex.Item2; indexBuchstabe < buchstabenArray.Length; indexBuchstabe++)
-                {
-                    var buchstabeInArray = buchstabenMatrix[indexBuchstabenArray][indexBuchstabe];
-                    if (buchstabeInArray == zusuchendeBuchstabe)
-                    {
-                        if (matches.Count == 0)
-                        {
-                            //Erstes Wort
-                            matches.Add(new Tuple<int, int>(indexBuchstabenArray, indexBuchstabe));
-                            var neuerStartIndex = new Tuple<int, int>(matches.Last().Item1, matches.Last().Item2);
-
-                            var buchstabenStackIntern = new Stack<char>(_zuMatchendesWort.Reverse());
-                            buchstabenStackIntern.Pop();
-                            BestueckeListeVonMatches(buchstabenStackIntern, neuerStartIndex, matches);
-                            matches = new List<Tuple<int, int>>();
-                            continue;
-                        }
-
-                        var vorherigeBuchstabenIndex = matches.Last();
-                        var aktuelleBuchstabenIndex = new Tuple<int, int>(indexBuchstabenArray, indexBuchstabe);
-                        if (SindDieBuchstabenZusamenhaengend(vorherigeBuchstabenIndex, aktuelleBuchstabenIndex))
-                        {
-                            matches.Add(new Tuple<int, int>(indexBuchstabenArray, indexBuchstabe));
-                            if (matches.Count == 5)
-                            {
-                                listeVonMatches.Add(matches);
-                                return;
-                            }
-
-
-                            zusuchendeBuchstabe = buchstabenStack.Pop();
-                        }
-                        else
-                        {
-                            return;
-                        }
-                    }
-                }
-            }
+            Assert.That(buchstabenMatrixRaetsel.HoleMatches().Count, Is.EqualTo(2));
+            Assert.That(anzahlMatches, Is.EqualTo(2));
         }
 
-
-        private bool SindDieBuchstabenZusamenhaengend(Tuple<int, int> vorherigeBuchstabenIndex, Tuple<int, int> aktuelleBuchstabenIndex)
+        [Test]
+        public void TestDasNichtFindenVonEinemWortInDerBuchstabenMatrixWennDasWortNichtVorhandenIst()
         {
-            var liegtHorizontalNebeneinander = vorherigeBuchstabenIndex.Item1 == aktuelleBuchstabenIndex.Item1
-                                               && vorherigeBuchstabenIndex.Item2 < aktuelleBuchstabenIndex.Item2;
+            var zuMatchendesWort = "NICHT";
 
-            var liegtVertikalNebeEinander = vorherigeBuchstabenIndex.Item2 == aktuelleBuchstabenIndex.Item2;
+            var buchstabenMatrixRaetsel = new BuchstabenMatrixRaetsel(buchstabenMatrix, zuMatchendesWort);
+            buchstabenMatrixRaetsel.LoeseRaetsel();
+            var anzahlMatches = buchstabenMatrixRaetsel.AnzahlMatches;
 
-            return liegtHorizontalNebeneinander || liegtVertikalNebeEinander;
+            Assert.That(buchstabenMatrixRaetsel.HoleMatches().Count, Is.EqualTo(0));
+            Assert.That(anzahlMatches, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void TestDasNichtFindenVonEinemWortDerLaengerAlsBuchstabenMatrixGroesseIst()
+        {
+            var zuMatchendesWort = "KATZE IN DEM SACK";
+            var buchstabenMatrixRaetsel = new BuchstabenMatrixRaetsel(buchstabenMatrix, zuMatchendesWort);
+            buchstabenMatrixRaetsel.LoeseRaetsel();
+            var anzahlMatches = buchstabenMatrixRaetsel.AnzahlMatches;
+
+            Assert.That(buchstabenMatrixRaetsel.HoleMatches().Count, Is.EqualTo(0));
+            Assert.That(anzahlMatches, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void TestDasListeVonMatchesUndAnzahlErstNachDemRaetselLoesenVerfuegbarSind()
+        {
+            var zuMatchendesWort = "WHITE-BOX Test";
+
+            var buchstabenMatrixRaetsel = new BuchstabenMatrixRaetsel(buchstabenMatrix, zuMatchendesWort);
+
+            Assert.That(() => buchstabenMatrixRaetsel.AnzahlMatches, Throws.TargetInvocationException, "Es muss erst das Rätsel gelöset werden.");
+            Assert.That(() => buchstabenMatrixRaetsel.HoleMatches(), Throws.TargetInvocationException, "Es muss erst das Rätsel gelöset werden.");
+
+            buchstabenMatrixRaetsel.LoeseRaetsel();
+
+            Assert.That(buchstabenMatrixRaetsel.HoleMatches().Count, Is.EqualTo(0));
+            Assert.That(buchstabenMatrixRaetsel.AnzahlMatches, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void TestDasFindenVonEinemWortWennKeineMatrixDaIst()
+        {
+            var buchstabenMatrixRaetsel = new BuchstabenMatrixRaetsel(null, "Keine Matrix");
+            Assert.That(() => buchstabenMatrixRaetsel.LoeseRaetsel(), Throws.ArgumentException);
+
+            var leererBuchstabenMatrix = new char[0][];
+
+            buchstabenMatrixRaetsel = new BuchstabenMatrixRaetsel(leererBuchstabenMatrix, "Keine Matrix");
+            Assert.That(() => buchstabenMatrixRaetsel.LoeseRaetsel(), Throws.ArgumentException);
+
+        }
+
+        [Test]
+        [TestCase("")]
+        [TestCase(null)]
+        public void TestDasFindenVonEinemWortWennKeinZuSuchendesWortSpezifiziertIst(string zuMatchendesWort)
+        {
+            var buchstabenMatrixRaetsel = new BuchstabenMatrixRaetsel(buchstabenMatrix, zuMatchendesWort);
+            Assert.That(() => buchstabenMatrixRaetsel.LoeseRaetsel(), Throws.ArgumentException);
         }
 
         private static char[][] ErzeugeZufaelligeBuchstabenMatrix()
