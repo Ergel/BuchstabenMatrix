@@ -10,7 +10,7 @@ namespace CodeKata.Test.BuchstabenMatrix
     [TestFixture]
     public class BuchstabenMatrixRaetselAdvancedTest
     {
-        readonly char[][] buchstabenMatrix = ErzeugeZufaelligeBuchstabenMatrix();
+        private readonly char[][] buchstabenMatrix = TestDatenProvider.ErzeugeBuchstabenMatrixWieInDerAnforderungen();
 
         [Test]
         public void TestDasFindenVonEinemWortInDerBuchstabenMatrixWennDasWortVorhandenIst()
@@ -40,25 +40,23 @@ namespace CodeKata.Test.BuchstabenMatrix
             erwartetePositionenFuerDenZweitenMatch.Add(new Point(2, 5));
 
             Assert.That(listeVonMatches[0], Is.EqualTo(erwartetePositionenFuerDenErstenMatch));
-            Assert.That(listeVonMatches[0], Is.EqualTo(erwartetePositionenFuerDenZweitenMatch));
+            Assert.That(listeVonMatches[1], Is.EqualTo(erwartetePositionenFuerDenZweitenMatch));
         }
 
-        private static char[][] ErzeugeZufaelligeBuchstabenMatrix()
+        [Test]
+        public void TesteDasSelbeZeichenFuerEinAnderesMatchWiederverwendetWerdenKann()
         {
-            //todo: Matrix flexible halten
-            var buchstabenMatrix = new char[4][];
+            var zuMatchendesWort = "KATZE";
 
-            var ersteZeile = new char[6] { 'K', 'L', 'P', 'Q', 'R', 'K' };
-            var zweiteZeile = new char[6] { 'A', 'T', 'L', 'D', 'A', 'I' };
-            var dritteZeile = new char[6] { 'M', 'Z', 'E', 'A', 'T', 'E' };
-            var vierteZeile = new char[6] { 'T', 'A', 'K', 'A', 'T', 'Z' };
+            var buchstabenMatrix = TestDatenProvider.ErzeugeBuchstabenMatrixSelbeZeichenFuerEinAnderesMatch();
 
-            buchstabenMatrix[0] = ersteZeile;
-            buchstabenMatrix[1] = zweiteZeile;
-            buchstabenMatrix[2] = dritteZeile;
-            buchstabenMatrix[3] = vierteZeile;
+            var buchstabenMatrixRaetsel = new BuchstabenMatrixRaetselAdvanced(buchstabenMatrix, zuMatchendesWort);
+            buchstabenMatrixRaetsel.LoeseRaetsel();
+            var anzahlMatches = buchstabenMatrixRaetsel.AnzahlMatches;
+            var listeVonMatches = buchstabenMatrixRaetsel.HoleMatches();
 
-            return buchstabenMatrix;
+            Assert.That(listeVonMatches.Count, Is.EqualTo(3));
+            Assert.That(anzahlMatches, Is.EqualTo(3));
         }
     }
 }

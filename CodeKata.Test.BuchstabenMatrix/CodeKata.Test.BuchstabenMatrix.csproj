@@ -54,6 +54,7 @@
     <Compile Include="BuchstabenMatrixRaetselAdvancedTest.cs" />
     <Compile Include="BuchstabenMatrixTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestDatenProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

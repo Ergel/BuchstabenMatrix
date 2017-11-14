@@ -13,60 +13,102 @@ namespace CodeKata.BuchstabenMatrix
     /// <example>
     /// //TODO: Ein besiepiel wäre hier nicht schlecht, um die Regeln klar zu machen.
     /// </example>
-    public class BuchstabenMatrixRaetselAdvanced
+    public class BuchstabenMatrixRaetselAdvanced : BuchstabenMatrixRaetselBase
     {
-        private readonly char[][] buchstabenMatrix;
-        private readonly string zuMatchendesWort;
-
-        private List<List<Point>> listeVonMatches = null;
-
         public BuchstabenMatrixRaetselAdvanced(char[][] buchstabenMatrix, string zuMatchendesWort)
+            : base(buchstabenMatrix, zuMatchendesWort)
         {
-            this.buchstabenMatrix = buchstabenMatrix;
-            this.zuMatchendesWort = zuMatchendesWort;
+
         }
 
-        public List<List<Point>> HoleMatches()
+        protected override void BestueckeListeVonMatches(Stack<char> buchstabenStack, Point startIndex, List<Point> matches)
         {
-            CheckObDasRaetselGeloestWurde();
-            return listeVonMatches;
-        }
-
-        public int AnzahlMatches
-        {
-            get
+            var zuSuchendeBuchstabe = buchstabenStack.Pop();
+            for (var indexBuchstabenArray = startIndex.X; indexBuchstabenArray < buchstabenMatrix.Length; indexBuchstabenArray++)
             {
-                CheckObDasRaetselGeloestWurde();
-                return listeVonMatches.Count;
-            }
-        }
+                var buchstabenArray = buchstabenMatrix[indexBuchstabenArray];
+                for (var indexBuchstabe = startIndex.Y; indexBuchstabe < buchstabenArray.Length; indexBuchstabe++)
+                {
+                    var buchstabeInArray = buchstabenMatrix[indexBuchstabenArray][indexBuchstabe];
+                    if (buchstabeInArray == zuSuchendeBuchstabe)
+                    {
+                        matches.Add(new Point(indexBuchstabenArray, indexBuchstabe));
+                        if (matches.Count == zuMatchendesWort.Length
+                            || buchstabenStack.Count == 0)
+                        {
+                            return;
+                        }
 
-        public List<List<Point>> LoeseRaetsel()
-        {
-            //todo: Überlegen, ob es besser ist, die folgende Assertion direkt im Konstruktor zu machen. 
-            //Dann kann mann verhindern, dass das BuchstabenMatrixRaetsel Objekt
-            //mit ungültigen Zustand instanziert werden kann.
-            if (buchstabenMatrix == null
-                || buchstabenMatrix.Length == 0)
-            {
-                throw new ArgumentException("Es wurde keinen Buchstabenmatrix bereitgestellt oder der Buchstabenmatrix ist leer.");
-            }
+                        zuSuchendeBuchstabe = buchstabenStack.Pop();
+                    }
 
-            if (string.IsNullOrEmpty(zuMatchendesWort))
-            {
-                throw new ArgumentException("Es wurde kein zu findendes Wort definiert.");
-            }
+                    if (matches.Count == 0)
+                    {
+                        continue;
+                    }
 
-            listeVonMatches = new List<List<Point>>();
+                    var indexLastMatch = matches.LastOrDefault();
+                    var indexNextMatch = new Point(-1, -1);
 
-            throw new NotImplementedException("Diese muss noch implementiert werden!");
-        }
+                    if (indexLastMatch.X < buchstabenMatrix.Length - 1)
+                    {
+                        var buchstabeUnten = buchstabenMatrix[indexLastMatch.X + 1][indexLastMatch.Y];
+                        if (buchstabeUnten == zuSuchendeBuchstabe)
+                        {
+                            indexNextMatch = new Point(indexLastMatch.X + 1, indexLastMatch.Y);
+                        }
 
-        private void CheckObDasRaetselGeloestWurde()
-        {
-            if (listeVonMatches == null)
-            {
-                throw new TargetInvocationException("Sie haben das Rätsel noch nicht gelöst.", null);
+                    }
+
+                    if (indexNextMatch.X == -1
+                        && indexLastMatch.X > 0)
+                    {
+                        var buchstabeOben = buchstabenMatrix[indexLastMatch.X - 1][indexLastMatch.Y];
+                        if (buchstabeOben == zuSuchendeBuchstabe)
+                        {
+                            indexNextMatch = new Point(indexLastMatch.X - 1, indexLastMatch.Y);
+                        }
+                    }
+
+                    if (indexNextMatch.X == -1)
+                    {
+                        if (indexLastMatch.Y == buchstabenArray.Length - 1)
+                        {
+                            matches = new List<Point>();
+                            buchstabenStack = new Stack<char>(zuMatchendesWort.Reverse());
+                            zuSuchendeBuchstabe = buchstabenStack.Pop();
+                        }
+
+                        continue;
+                    }
+
+                    matches.Add(indexNextMatch);
+                    if (matches.Count == zuMatchendesWort.Length
+                        || buchstabenStack.Count == 0)
+                    {
+                        listeVonMatches.Add(matches);
+                        return;
+                    }
+
+                    var matchedTeil = zuMatchendesWort.Substring(0, matches.Count);
+                    var restDesWortes = zuMatchendesWort.Replace(matchedTeil, string.Empty);
+
+                    var indexNeueSuchPosition = new Point(indexNextMatch.X, indexNextMatch.Y + 1);
+
+                    var buchstabenStackIntern = new Stack<char>(restDesWortes.Reverse());
+                    BestueckeListeVonMatches(buchstabenStackIntern, indexNeueSuchPosition, matches);
+
+                    if (matches.Count == zuMatchendesWort.Length
+                        && restDesWortes.Length == 1)
+                    {
+                        listeVonMatches.Add(matches);
+                        return;
+                    }
+
+                    matches = new List<Point>();
+                    buchstabenStack = new Stack<char>(zuMatchendesWort.Reverse());
+                    zuSuchendeBuchstabe = buchstabenStack.Pop();
+                }
             }
         }
     }
